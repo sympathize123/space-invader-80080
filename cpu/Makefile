@@ -1,12 +1,15 @@
 CC = g++
 TARGET = main
 CXXFLAGS = -Wall
-OBJECTS = register.o
-conditional_code.o: conditional_code.cpp
-	$(CC) $(CXXFLAGS) -c conditional_code.cpp
-register.o: register.cpp, conditional_code.o
-	$(CC) $(CXXFLAGS)-c register.cpp
-main: register.o main.cpp
+OBJECTS = cpu.o main.o state.o
+main: $(OBJECTS)
 	$(CC) $(CXXFLAGS) $(OBJECTS) -o $(TARGET)
+cpu.o: cpu.h state.h cpu.cpp
+	$(CC) $(CXXFLAGS) -c cpu.cpp
+state.o: state.cpp state.h
+	$(CC) $(CXXFLAGS) -c state.cpp
+main.o: cpu.h main.cpp
+	$(CC) $(CXXFLAGS) -c main.cpp
+
 clean:
-	rm $(OBJECTS) $(TARGET)
+	rm -f $(OBJECTS) $(TARGET)
