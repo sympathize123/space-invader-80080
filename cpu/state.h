@@ -24,6 +24,14 @@ struct flags
     };
 };
 
+struct memory 
+{
+    memory();    
+    memory(uint8_t* location, int size);
+    uint8_t* mem_location;
+    uint16_t mem_size;
+};
+
 struct state
 {
     state();
@@ -37,7 +45,7 @@ struct state
     uint16_t sp;
     uint16_t pc;
     flags flag;
-    uint8_t *mem;
+    memory cpu_mem;
     uint8_t enable;
 };
 #endif

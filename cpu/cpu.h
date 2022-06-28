@@ -12,6 +12,7 @@ namespace cpu
 
         public:
             CPU();
+            CPU(memory mem);
             void unmapped_instruction(unsigned char opcode);
             void emulate();
     };

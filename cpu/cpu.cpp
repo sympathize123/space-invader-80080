@@ -12,8 +12,15 @@ cpu::CPU::CPU() {
     this->cpu_state = state();
 };
 
+cpu::CPU::CPU(memory mem) {
+    this->cpu_state = state();
+    cpu_state.cpu_mem = mem;
+    
+};
+
 void cpu::CPU::emulate() {
-    uint8_t* opcode = &cpu_state.mem[cpu_state.pc];
+    
+    uint8_t* opcode = &cpu_state.cpu_mem.mem_location[cpu_state.pc];
     switch (opcode[0])
     {
     //NOP
