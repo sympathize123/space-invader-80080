@@ -26,6 +26,7 @@ struct flags
 
 struct state
 {
+    state();
     uint8_t B;
     uint8_t C;
     uint8_t D;
