@@ -28,6 +28,7 @@ state::state() {
     this->A = 0;
     this->sp = 0;
     this->pc = 0;
+    this->enable = 0;
     this->cpu_mem = memory();
     this->flag = flags();
 }
