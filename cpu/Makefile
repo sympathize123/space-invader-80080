@@ -1,7 +1,7 @@
 CC = g++
 TARGET = main
 CXXFLAGS = -Wall -O0 -g
-OBJECTS = cpu.o main.o state.o
+OBJECTS = cpu.o main.o state.o memory.o
 main: $(OBJECTS)
 	$(CC) $(CXXFLAGS) $(OBJECTS) -o $(TARGET) 
 cpu.o: cpu.h state.h cpu.cpp
