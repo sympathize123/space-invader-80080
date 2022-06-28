@@ -3,7 +3,18 @@
 
 #include "state.h"
 
-void unmapped_instruction();
-void emulate(state state);
+namespace cpu
+{
+    class CPU
+    {
+        protected:
+            state cpu_state;
+
+        public:
+            CPU();
+            void unmapped_instruction(unsigned char opcode);
+            void emulate();
+    };
+};
 
 #endif
