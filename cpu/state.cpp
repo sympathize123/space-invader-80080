@@ -9,6 +9,16 @@ void flags::reset() {
     all = 0;
 }
 
+uint8_t state::parity(uint8_t state) {
+    uint8_t result = 0;
+    uint8_t mask = 0x1;
+    for(int i = 0;i < 8;i++, mask <<= 1){
+        state & mask ? result = 1 : result = 0;
+        state >>= 1;
+    };
+    return result;
+}
+
 state::state() {
     this->B = 0;
     this->C = 0;
