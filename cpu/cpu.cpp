@@ -1,6 +1,7 @@
 #include "state.h"
 #include "cpu.h"
 #include <iostream>
+#include "../memory/memory.h"
 
 using namespace std;
 
@@ -25,17 +26,17 @@ uint16_t cpu::CPU::translate(uint16_t address){
     return address;
 }
 
-uint8_t cpu::CPU::read_memory(uint16_t address)
+uint8_t cpu::CPU::read_memory(uint16_t in_address)
 {
-    uint16_t address = translate(address);
+    uint16_t address = translate(in_address);
     uint8_t value = this->cpu_mem.mem_location[address];
     return value;
 }
 
-int cpu::CPU::write_memory(uint16_t address, uint8_t value) {
-    uint16_t address = translate(address);
-    if(address < )
-    this->cpu_mem.mem_location[address] = value;
+int cpu::CPU::write_memory(uint16_t in_address, uint8_t value) {
+    uint16_t address = translate(in_address);
+    if(address < cpu_mem.mem_size)
+        this->cpu_mem.mem_location[address] = value;
 }
 
 

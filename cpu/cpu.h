@@ -2,6 +2,7 @@
 #define __CPU_H__
 
 #include "state.h"
+#include "../memory/memory.h"
 
 namespace cpu
 {

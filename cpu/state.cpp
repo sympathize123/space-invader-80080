@@ -1,5 +1,5 @@
 #include "state.h"
-#include "memory.h"
+#include "../memory/memory.h"
 
 flags::flags() : all(0) {
 
@@ -20,7 +20,6 @@ state::state() {
     this->sp = 0;
     this->pc = 0;
     this->enable = 0;
-    this->cpu_mem = memory();
     this->flag = flags();
 }
 
