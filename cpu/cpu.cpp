@@ -3,39 +3,48 @@
 #include <iostream>
 #include "../memory/memory.h"
 #include <cstring>
+#include "../disassembler/opcode.h"
 
 using namespace std;
 
-void cpu::CPU::unmapped_instruction(unsigned char opcode){
+void cpu::CPU::unmapped_instruction(unsigned char opcode)
+{
     cout << "no intructions for the opcode " << opcode << endl;
 }
 
-cpu::CPU::CPU() {
+cpu::CPU::CPU()
+{
     this->cpu_state = state();
 };
 
-cpu::CPU::CPU(memory mem) {
+cpu::CPU::CPU(memory mem)
+{
     this->cpu_state = state();
     cpu_mem = mem;
-    
 };
 
-void cpu::CPU::emulate() {
-    uint8_t* opcode = &cpu_mem.mem_location[cpu_state.pc];
+void cpu::CPU::emulate()
+{
+    uint8_t *opcode = &cpu_mem.mem_location[cpu_state.pc];
+
+    make_opcode(opcode[0], cpu_state.pc);
+
+    cpu_state.pc++;
+
     switch (opcode[0])
     {
-    //NOP
+    // NOP
     case 0x00:
         break;
-    //LXI B
+    // LXI B
     case 0x01:
         cpu_state.B = opcode[2];
         cpu_state.C = opcode[1];
         cpu_state.pc += 2;
         break;
-    //STAX B
+    // STAX B
     case 0x02:
-        cpu_mem.write_memory(cpu_state.B,cpu_state.A);
+        cpu_mem.write_memory(cpu_state.B, cpu_state.A);
         break;
     case 0x03:
         break;
@@ -44,13 +53,13 @@ void cpu::CPU::emulate() {
         break;
     case 0x05:
         cpu_state.B--;
-        if((cpu_state.B & 0xff) == 0)
+        if ((cpu_state.B & 0xff) == 0)
             cpu_state.flag.z = 1;
-        if((cpu_state.B & 0x80 >> 3) == 1)
+        if ((cpu_state.B & 0x80 >> 3) == 1)
             cpu_state.flag.s = 1;
-        if(cpu_state.parity(cpu_state.B))
+        if (cpu_state.parity(cpu_state.B))
             cpu_state.flag.p = 1;
-        if((cpu_state.B | 0x1000 << 4 >> 7) == 1)
+        if ((cpu_state.B | 0x1000 << 4 >> 7) == 1)
             cpu_state.flag.auxc = 1;
         break;
     case 0x06:
@@ -62,23 +71,25 @@ void cpu::CPU::emulate() {
     case 0x08:
         /* code */
         break;
-    case 0x09: {
-            uint32_t hl = concat_address(cpu_state.H,cpu_state.L);
-            uint32_t bc = concat_address(cpu_state.B,cpu_state.C);
-            uint32_t res = hl + bc;
-            cpu_state.H = (res & 0xff00) >> 8;
-            cpu_state.L = res & 0xff;
-            cpu_state.flag.c = ((res & 0xffff0000) > 0);
+    case 0x09:
+    {
+        uint32_t hl = concat_address(cpu_state.H, cpu_state.L);
+        uint32_t bc = concat_address(cpu_state.B, cpu_state.C);
+        uint32_t res = hl + bc;
+        cpu_state.H = (res & 0xff00) >> 8;
+        cpu_state.L = res & 0xff;
+        cpu_state.flag.c = ((res & 0xffff0000) > 0);
     }
-        break;
+    break;
     case 0x0a:
         break;
     case 0x0b:
         break;
     case 0x0c:
         break;
-    //DCR C
-    case 0x0d: {
+    // DCR C
+    case 0x0d:
+    {
         uint8_t result = --cpu_state.C;
         cpu_state.flag.z = (result == 0);
         cpu_state.flag.s = ((result & 0x80) == 0x80);
@@ -86,12 +97,12 @@ void cpu::CPU::emulate() {
         cpu_state.flag.auxc = ((result | 0x1000 << 4 >> 7) == 1);
         break;
     }
-    //MVI C,D8
+    // MVI C,D8
     case 0x0e:
         cpu_state.C = opcode[1];
         cpu_state.pc += 2;
         break;
-    //RRC
+    // RRC
     case 0x0f:
         cpu_state.flag.c = (cpu_state.A & 0x1);
         cpu_state.A = (cpu_state.A >> 1 | cpu_state.flag.c << 7);
@@ -99,7 +110,7 @@ void cpu::CPU::emulate() {
     case 0x10:
         /* code */
         break;
-    //LXI D
+    // LXI D
     case 0x11:
         cpu_state.D = opcode[2];
         cpu_state.E = opcode[1];
@@ -108,13 +119,14 @@ void cpu::CPU::emulate() {
     case 0x12:
         /* code */
         break;
-    //INX D
-    case 0x13: {
-        uint16_t result = concat_address(cpu_state.D,cpu_state.E);
+    // INX D
+    case 0x13:
+    {
+        uint16_t result = concat_address(cpu_state.D, cpu_state.E);
         cpu_state.D = (result & 0xff00) >> 8;
         cpu_state.E = (result & 0xff);
     }
-        break;
+    break;
     case 0x14:
         /* code */
         break;
@@ -130,24 +142,26 @@ void cpu::CPU::emulate() {
     case 0x18:
         /* code */
         break;
-    //DAD D
-    case 0x19: {
-            uint32_t hl = concat_address(cpu_state.H,cpu_state.L);
-            uint32_t bc = concat_address(cpu_state.H,cpu_state.L);
-            uint32_t res = hl + bc;
-            cpu_state.H = (res & 0xff00) >> 8;
-            cpu_state.L = res & 0xff;
-            cpu_state.flag.c = ((res & 0xffff0000) > 0);
+    // DAD D
+    case 0x19:
+    {
+        uint32_t hl = concat_address(cpu_state.H, cpu_state.L);
+        uint32_t bc = concat_address(cpu_state.H, cpu_state.L);
+        uint32_t res = hl + bc;
+        cpu_state.H = (res & 0xff00) >> 8;
+        cpu_state.L = res & 0xff;
+        cpu_state.flag.c = ((res & 0xffff0000) > 0);
     }
-        /* code */
-        break;
-    //LDAX D
-    case 0x1a: {
-        uint16_t address = concat_address(cpu_state.H,cpu_state.L);
+    /* code */
+    break;
+    // LDAX D
+    case 0x1a:
+    {
+        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
         address = cpu_mem.translate(address);
         cpu_mem.mem_location[address] = cpu_state.A;
     }
-        break;
+    break;
     case 0x1b:
         /* code */
         break;
@@ -166,7 +180,7 @@ void cpu::CPU::emulate() {
     case 0x20:
         /* code */
         break;
-    //LXI H
+    // LXI H
     case 0x21:
         cpu_state.H = opcode[2];
         cpu_state.L = opcode[1];
@@ -175,19 +189,20 @@ void cpu::CPU::emulate() {
     case 0x22:
         cpu_state.pc += 2;
         break;
-    case 0x23: {
-        uint16_t result = concat_address(cpu_state.H,cpu_state.L);
+    case 0x23:
+    {
+        uint16_t result = concat_address(cpu_state.H, cpu_state.L);
         cpu_state.H = (result & 0xff00) >> 8;
         cpu_state.L = (result & 0xff);
-    }   
-        break;
+    }
+    break;
     case 0x24:
         /* code */
         break;
     case 0x25:
         /* code */
         break;
-    //MVI H,D8
+    // MVI H,D8
     case 0x26:
         cpu_state.H = opcode[1];
         cpu_state.pc++;
@@ -198,15 +213,16 @@ void cpu::CPU::emulate() {
     case 0x28:
         /* code */
         break;
-    //DAD H
-    case 0x29: {
-            uint32_t hl = concat_address(cpu_state.H,cpu_state.L);
-            hl *= 2;
-            cpu_state.H = (hl & 0xff00) >> 8;
-            cpu_state.L = hl & 0xff;
-            cpu_state.flag.c = ((hl & 0xffff0000) > 0);
+    // DAD H
+    case 0x29:
+    {
+        uint32_t hl = concat_address(cpu_state.H, cpu_state.L);
+        hl *= 2;
+        cpu_state.H = (hl & 0xff00) >> 8;
+        cpu_state.L = hl & 0xff;
+        cpu_state.flag.c = ((hl & 0xffff0000) > 0);
     }
-        break;
+    break;
     case 0x2a:
         cpu_state.pc += 2;
         break;
@@ -228,17 +244,18 @@ void cpu::CPU::emulate() {
     case 0x30:
         /* code */
         break;
-    //LXI sp
+    // LXI sp
     case 0x31:
         cpu_state.sp = (uint16_t)opcode[1];
         cpu_state.pc += 2;
         break;
-    case 0x32: {
-        uint16_t address = concat_address(opcode[2],opcode[1]);
+    case 0x32:
+    {
+        uint16_t address = concat_address(opcode[2], opcode[1]);
         cpu_mem.mem_location[address] = cpu_state.A;
         cpu_state.pc += 2;
     }
-        break;
+    break;
     case 0x33:
         /* code */
         break;
@@ -248,16 +265,17 @@ void cpu::CPU::emulate() {
     case 0x35:
         /* code */
         break;
-    //MVI M,D8
-    case 0x36: {
-        uint16_t* address = new uint16_t();
-        memcpy(address,&cpu_state.L,1);
-        memcpy((uint8_t*)address + 1,&cpu_state.H,1);
+    // MVI M,D8
+    case 0x36:
+    {
+        uint16_t *address = new uint16_t();
+        memcpy(address, &cpu_state.L, 1);
+        memcpy((uint8_t *)address + 1, &cpu_state.H, 1);
         this->cpu_mem.translate(*address);
-        cpu_state.pc++;  
+        cpu_state.pc++;
         delete address;
     }
-        break;
+    break;
     case 0x37:
         /* code */
         break;
@@ -267,12 +285,13 @@ void cpu::CPU::emulate() {
     case 0x39:
         /* code */
         break;
-    case 0x3a: {
-        uint16_t address = concat_address(opcode[2],opcode[1]);
+    case 0x3a:
+    {
+        uint16_t address = concat_address(opcode[2], opcode[1]);
         cpu_state.A = cpu_mem.mem_location[address];
         cpu_state.pc += 2;
     }
-        break;
+    break;
     case 0x3b:
         /* code */
         break;
@@ -282,7 +301,7 @@ void cpu::CPU::emulate() {
     case 0x3d:
         /* code */
         break;
-    //MVI A,D8
+    // MVI A,D8
     case 0x3e:
         cpu_state.A = opcode[1];
         cpu_state.pc++;
@@ -356,12 +375,13 @@ void cpu::CPU::emulate() {
     case 0x55:
         /* code */
         break;
-    //MOV D,M
-    case 0x56: {
-            uint16_t address = concat_address(cpu_state.H,cpu_state.L);
-            cpu_state.D = cpu_mem.mem_location[address];
-        }
-        break;
+    // MOV D,M
+    case 0x56:
+    {
+        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
+        cpu_state.D = cpu_mem.mem_location[address];
+    }
+    break;
     case 0x57:
         /* code */
         break;
@@ -383,12 +403,13 @@ void cpu::CPU::emulate() {
     case 0x5d:
         /* code */
         break;
-    //MOV E,M
-    case 0x5e: {
-            uint16_t address = concat_address(cpu_state.H,cpu_state.L);
-            cpu_state.E = cpu_mem.mem_location[address];
-        }
-        break;
+    // MOV E,M
+    case 0x5e:
+    {
+        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
+        cpu_state.E = cpu_mem.mem_location[address];
+    }
+    break;
     case 0x5f:
         /* code */
         break;
@@ -410,12 +431,13 @@ void cpu::CPU::emulate() {
     case 0x65:
         /* code */
         break;
-    //MOV H,M
-    case 0x66: {
-            uint16_t address = concat_address(cpu_state.H,cpu_state.L);
-            cpu_state.H = cpu_mem.mem_location[address];
-        }
-        break;
+    // MOV H,M
+    case 0x66:
+    {
+        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
+        cpu_state.H = cpu_mem.mem_location[address];
+    }
+    break;
     case 0x67:
         /* code */
         break;
@@ -440,13 +462,14 @@ void cpu::CPU::emulate() {
     case 0x6e:
         /* code */
         break;
-    //MOV L,A
-    case 0x6f: {
-            uint16_t address = concat_address(cpu_state.H,cpu_state.L);
-            cpu_state.L = cpu_mem.mem_location[address];
-        }
-        /* code */
-        break;
+    // MOV L,A
+    case 0x6f:
+    {
+        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
+        cpu_state.L = cpu_mem.mem_location[address];
+    }
+    /* code */
+    break;
     case 0x70:
         /* code */
         break;
@@ -468,45 +491,41 @@ void cpu::CPU::emulate() {
     case 0x76:
         /* code */
         break;
-    //MOV M,A 
-    case 0x77:{
-            uint16_t address = concat_address(cpu_state.H,cpu_state.L);
-            cpu_mem.mem_location[address]= cpu_state.A;
-        }
-        /* code */
-        break;
+    // MOV M,A
+    case 0x77:
+    {
+        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
+        cpu_mem.mem_location[address] = cpu_state.A;
+    }
+    /* code */
+    break;
     case 0x78:
         /* code */
         break;
     case 0x79:
         /* code */
         break;
-    //MOV A,D
-    case 0x7a:{
-            uint16_t address = concat_address(cpu_state.H,cpu_state.L);
-            cpu_state.A = cpu_state.D;
-        }
+    // MOV A,D
+    case 0x7a:
+        cpu_state.A = cpu_state.D;
         break;
-    //MOV A,E
-    case 0x7b:{
-            uint16_t address = concat_address(cpu_state.H,cpu_state.L);
-            cpu_state.A = cpu_state.E;
-        }
+    // MOV A,E
+    case 0x7b:
+        cpu_state.A = cpu_state.E;
         break;
-    //MOV A,H
-    case 0x7c:{
-            uint16_t address = concat_address(cpu_state.H,cpu_state.L);
-            cpu_state.A = cpu_state.H;
-        }
+    // MOV A,H
+    case 0x7c:
+        cpu_state.A = cpu_state.H;
         break;
     case 0x7d:
         break;
-    //MOV A,M
-    case 0x7e:{
-            uint16_t address = concat_address(cpu_state.H,cpu_state.L);
-            cpu_state.A = cpu_mem.mem_location[address];
-        }
-        break;
+    // MOV A,M
+    case 0x7e:
+    {
+        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
+        cpu_state.A = cpu_mem.mem_location[address];
+    }
+    break;
     case 0x7f:
         /* code */
         break;
@@ -596,7 +615,7 @@ void cpu::CPU::emulate() {
         break;
     case 0xa6:
         break;
-    //ANA A
+    // ANA A
     case 0xa7:
         cpu_state.A &= cpu_state.A;
         cpu_state.flag.c = 0;
@@ -619,7 +638,14 @@ void cpu::CPU::emulate() {
         break;
     case 0xae:
         break;
+    // XRA A
     case 0xaf:
+        cpu_state.A ^= cpu_state.A;
+        cpu_state.flag.c = 0;
+        cpu_state.flag.z = (cpu_state.A == 0);
+        cpu_state.flag.s = ((cpu_state.A & 0x80) == 0x80);
+        cpu_state.flag.p = cpu_state.parity(cpu_state.A);
+        cpu_state.flag.auxc = ((cpu_state.A | 0x1000 << 4 >> 7) == 1);
         break;
     case 0xb0:
         break;
@@ -655,27 +681,48 @@ void cpu::CPU::emulate() {
         break;
     case 0xc0:
         break;
+    // POP B
     case 0xc1:
+        cpu_state.C = cpu_mem.mem_location[cpu_state.sp];
+        cpu_state.B = cpu_mem.mem_location[cpu_state.sp + 1];
+        cpu_state.sp += 2;
         break;
     case 0xc2:
-        cpu_state.pc += 2;
+        if (cpu_state.flag.z)
+            cpu_state.pc = concat_address(opcode[2], opcode[1]);
+        else
+            cpu_state.pc += 2;
         break;
     case 0xc3:
-        cpu_state.pc += 2;
+        cpu_state.pc = concat_address(opcode[2], opcode[1]);
         break;
     case 0xc4:
         cpu_state.pc += 2;
         break;
     case 0xc5:
+        cpu_mem.mem_location[cpu_state.sp - 1] = cpu_state.B;
+        cpu_mem.mem_location[cpu_state.sp - 2] = cpu_state.C;
+        cpu_state.sp -= 2;
         break;
     case 0xc6:
+    {
+        uint16_t res = cpu_state.A + opcode[1];
+        cpu_state.flag.z = ((res & 0xff) == 0);
+        cpu_state.flag.s = (0x80 == (res & 0x80));
+        cpu_state.flag.p = cpu_state.parity(res & 0xff);
+        cpu_state.flag.c = (res > 0xff);
+        cpu_state.A = (uint8_t)res;
         cpu_state.pc++;
-        break;
+        cpu_state.pc++;
+    }
+    break;
     case 0xc7:
         break;
     case 0xc8:
         break;
     case 0xc9:
+        cpu_state.pc = cpu_mem.mem_location[cpu_state.sp] | (cpu_mem.mem_location[cpu_state.sp + 1] << 8);
+        cpu_state.sp += 2;
         break;
     case 0xca:
         cpu_state.pc += 2;
@@ -686,8 +733,14 @@ void cpu::CPU::emulate() {
         cpu_state.pc += 2;
         break;
     case 0xcd:
-        cpu_state.pc += 2;
-        break;
+    {
+        cpu_state.pc = concat_address(opcode[2], opcode[1]);
+        uint16_t ret = cpu_state.pc + 2;
+        cpu_mem.mem_location[cpu_state.sp - 1] = (ret >> 8) & 0xff;
+        cpu_mem.mem_location[cpu_state.sp - 2] = (ret & 0xff);
+        cpu_state.sp = cpu_state.sp - 2;
+    }
+    break;
     case 0xce:
         cpu_state.pc++;
         break;
@@ -696,6 +749,9 @@ void cpu::CPU::emulate() {
     case 0xd0:
         break;
     case 0xd1:
+        cpu_state.D = cpu_mem.mem_location[cpu_state.sp];
+        cpu_state.E = cpu_mem.mem_location[cpu_state.sp + 1];
+        cpu_state.sp += 2;
         break;
     case 0xd2:
         cpu_state.pc += 2;
@@ -707,6 +763,9 @@ void cpu::CPU::emulate() {
         cpu_state.pc += 2;
         break;
     case 0xd5:
+        cpu_mem.mem_location[cpu_state.sp - 1] = cpu_state.D;
+        cpu_mem.mem_location[cpu_state.sp - 2] = cpu_state.E;
+        cpu_state.sp -= 2;
         break;
     case 0xd6:
         cpu_state.pc++;
@@ -736,6 +795,9 @@ void cpu::CPU::emulate() {
     case 0xe0:
         break;
     case 0xe1:
+        cpu_state.H = cpu_mem.mem_location[cpu_state.sp];
+        cpu_state.L = cpu_mem.mem_location[cpu_state.sp + 1];
+        cpu_state.sp += 2;
         break;
     case 0xe2:
         cpu_state.pc += 2;
@@ -746,6 +808,9 @@ void cpu::CPU::emulate() {
         cpu_state.pc += 2;
         break;
     case 0xe5:
+        cpu_mem.mem_location[cpu_state.sp - 1] = cpu_state.H;
+        cpu_mem.mem_location[cpu_state.sp - 2] = cpu_state.L;
+        cpu_state.sp -= 2;
         break;
     case 0xe6:
         cpu_state.pc++;
@@ -774,7 +839,17 @@ void cpu::CPU::emulate() {
     case 0xf0:
         break;
     case 0xf1:
-        break;
+    {
+        cpu_state.A = cpu_mem.mem_location[cpu_state.sp + 1];
+        uint8_t psw = cpu_mem.mem_location[cpu_state.sp];
+        cpu_state.flag.z = (0x01 == (psw & 0x01));
+        cpu_state.flag.s = (0x02 == (psw & 0x02));
+        cpu_state.flag.p = (0x04 == (psw & 0x04));
+        cpu_state.flag.c = (0x05 == (psw & 0x08));
+        cpu_state.flag.auxc = (0x10 == (psw & 0x10));
+        cpu_state.sp += 2;
+    }
+    break;
     case 0xf2:
         cpu_state.pc += 2;
         break;
@@ -784,7 +859,17 @@ void cpu::CPU::emulate() {
         cpu_state.pc += 2;
         break;
     case 0xf5:
-        break;
+    {
+        cpu_mem.mem_location[cpu_state.sp - 1] = cpu_state.A;
+        uint8_t psw = (cpu_state.flag.z |
+                       cpu_state.flag.s << 1 |
+                       cpu_state.flag.p << 2 |
+                       cpu_state.flag.c << 3 |
+                       cpu_state.flag.auxc << 4);
+        cpu_mem.mem_location[cpu_state.sp - 2] = psw;
+        cpu_state.sp = cpu_state.sp - 2;
+    }
+    break;
     case 0xf6:
         cpu_state.pc++;
         break;
@@ -810,5 +895,12 @@ void cpu::CPU::emulate() {
     case 0xff:
         break;
     }
-    cpu_state.pc ++;
+    printf("\t");
+    printf("%c", cpu_state.flag.z ? 'z' : '.');
+    printf("%c", cpu_state.flag.s ? 's' : '.');
+    printf("%c", cpu_state.flag.p ? 'p' : '.');
+    printf("%c", cpu_state.flag.c ? 'c' : '.');
+    printf("%c  ", cpu_state.flag.auxc ? 'a' : '.');
+    printf("A $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x\n", cpu_state.A, cpu_state.B, cpu_state.C,
+           cpu_state.D, cpu_state.E, cpu_state.H, cpu_state.L, cpu_state.sp);
 }
