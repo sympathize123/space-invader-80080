@@ -29,3 +29,7 @@ void memory::write_memory(uint16_t in_address, uint8_t value) {
     if(address < this->mem_size)
         this->mem_location[address] = value;
 }
+
+uint16_t concat_address(uint8_t high, uint8_t low) {
+    return high << 8 | low;
+}

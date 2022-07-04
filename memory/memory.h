@@ -14,4 +14,6 @@ struct memory
     uint16_t mem_size;
 };
 
+uint16_t concat_address(uint8_t high, uint8_t low);
+
 #endif
