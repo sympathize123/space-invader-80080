@@ -4,11 +4,11 @@
 
 using namespace std;
 
-int make_opcode(string code, int pc)
+int make_opcode(uint8_t op, int pc)
 {
     int opbytes = 1;
-    printf ("%04x ", pc);
-    switch ((unsigned char) code[pc])
+    printf("%04x ", pc);
+    switch (op)
     {
     case 0x00:
         printf("NOP\n");
