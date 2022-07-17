@@ -4,11 +4,11 @@
 
 using namespace std;
 
-int make_opcode(uint8_t op, int pc)
+int make_opcode(uint8_t *op, int pc)
 {
     int opbytes = 1;
     printf("%04x ", pc);
-    switch (op)
+    switch (op[0])
     {
     case 0x00:
         printf("NOP\n");
@@ -779,5 +779,6 @@ int make_opcode(uint8_t op, int pc)
         printf("RST \n");
         break;
     }
+    printf("%x%x%x", op[0], op[1], op[2]);
     return opbytes;
 }

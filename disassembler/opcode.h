@@ -5,5 +5,5 @@
 
 using namespace std;
 
-int make_opcode(uint8_t code, int pc);
+int make_opcode(uint8_t *code, int pc);
 #endif

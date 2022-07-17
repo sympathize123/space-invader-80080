@@ -27,7 +27,7 @@ void cpu::CPU::emulate()
 {
     uint8_t *opcode = &cpu_mem.mem_location[cpu_state.pc];
 
-    make_opcode(opcode[0], cpu_state.pc);
+    make_opcode(opcode, cpu_state.pc);
 
     cpu_state.pc++;
 
@@ -38,20 +38,28 @@ void cpu::CPU::emulate()
         break;
     // LXI B
     case 0x01:
+    {
         cpu_state.B = opcode[2];
         cpu_state.C = opcode[1];
         cpu_state.pc += 2;
-        break;
+    }
+    break;
     // STAX B
     case 0x02:
-        cpu_mem.write_memory(cpu_state.B, cpu_state.A);
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x03:
-        break;
+    {
+        unmapped_instruction(opcode[0]);
+        exit(0);
+    }
+    break;
     case 0x04:
         cpu_state.B++;
         break;
     case 0x05:
+    {
         cpu_state.B--;
         if ((cpu_state.B & 0xff) == 0)
             cpu_state.flag.z = 1;
@@ -61,15 +69,19 @@ void cpu::CPU::emulate()
             cpu_state.flag.p = 1;
         if ((cpu_state.B | 0x1000 << 4 >> 7) == 1)
             cpu_state.flag.auxc = 1;
-        break;
+    }
+    break;
     case 0x06:
         cpu_state.B = opcode[1];
         cpu_state.pc++;
         break;
     case 0x07:
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x08:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x09:
     {
@@ -82,10 +94,16 @@ void cpu::CPU::emulate()
     }
     break;
     case 0x0a:
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x0b:
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x0c:
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // DCR C
     case 0x0d:
@@ -99,48 +117,60 @@ void cpu::CPU::emulate()
     }
     // MVI C,D8
     case 0x0e:
+    {
         cpu_state.C = opcode[1];
         cpu_state.pc += 2;
-        break;
+    }
+    break;
     // RRC
     case 0x0f:
+    {
         cpu_state.flag.c = (cpu_state.A & 0x1);
         cpu_state.A = (cpu_state.A >> 1 | cpu_state.flag.c << 7);
-        break;
+    }
+    break;
     case 0x10:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // LXI D
     case 0x11:
+    {
         cpu_state.D = opcode[2];
         cpu_state.E = opcode[1];
         cpu_state.pc += 2;
-        break;
+    }
+    break;
     case 0x12:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // INX D
     case 0x13:
     {
-        uint16_t result = concat_address(cpu_state.D, cpu_state.E);
-        cpu_state.D = (result & 0xff00) >> 8;
-        cpu_state.E = (result & 0xff);
+        cpu_state.E++;
+        if (cpu_state.E == 0)
+            cpu_state.D++;
     }
     break;
     case 0x14:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x15:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x16:
         cpu_state.pc++;
         break;
     case 0x17:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x18:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // DAD D
     case 0x19:
@@ -152,55 +182,64 @@ void cpu::CPU::emulate()
         cpu_state.L = res & 0xff;
         cpu_state.flag.c = ((res & 0xffff0000) > 0);
     }
-    /* code */
     break;
-    // LDAX D
     case 0x1a:
     {
-        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
+        uint16_t address = concat_address(cpu_state.D, cpu_state.E);
         address = cpu_mem.translate(address);
-        cpu_mem.mem_location[address] = cpu_state.A;
+        cpu_state.A = cpu_mem.mem_location[address];
     }
     break;
     case 0x1b:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x1c:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x1d:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x1e:
-        cpu_state.pc++;
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x1f:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x20:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // LXI H
     case 0x21:
+    {
         cpu_state.H = opcode[2];
         cpu_state.L = opcode[1];
         cpu_state.pc += 2;
-        break;
+    }
+    break;
     case 0x22:
-        cpu_state.pc += 2;
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x23:
     {
-        uint16_t result = concat_address(cpu_state.H, cpu_state.L);
-        cpu_state.H = (result & 0xff00) >> 8;
-        cpu_state.L = (result & 0xff);
+        cpu_state.L++;
+        if (cpu_state.L == 0)
+            cpu_state.H++;
     }
     break;
     case 0x24:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x25:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // MVI H,D8
     case 0x26:
@@ -208,10 +247,12 @@ void cpu::CPU::emulate()
         cpu_state.pc++;
         break;
     case 0x27:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x28:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // DAD H
     case 0x29:
@@ -224,31 +265,40 @@ void cpu::CPU::emulate()
     }
     break;
     case 0x2a:
-        cpu_state.pc += 2;
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x2b:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x2c:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x2d:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x2e:
-        cpu_state.pc++;
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x2f:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x30:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // LXI sp
     case 0x31:
-        cpu_state.sp = (uint16_t)opcode[1];
+    {
+        cpu_state.sp = (opcode[2] << 8) | opcode[1];
         cpu_state.pc += 2;
-        break;
+    }
+    break;
     case 0x32:
     {
         uint16_t address = concat_address(opcode[2], opcode[1]);
@@ -257,33 +307,33 @@ void cpu::CPU::emulate()
     }
     break;
     case 0x33:
-        /* code */
+
         break;
     case 0x34:
-        /* code */
+
         break;
     case 0x35:
-        /* code */
+
         break;
     // MVI M,D8
     case 0x36:
     {
-        uint16_t *address = new uint16_t();
-        memcpy(address, &cpu_state.L, 1);
-        memcpy((uint8_t *)address + 1, &cpu_state.H, 1);
-        this->cpu_mem.translate(*address);
+        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
+        cpu_mem.mem_location[address] = opcode[1];
         cpu_state.pc++;
-        delete address;
     }
     break;
     case 0x37:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x38:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x39:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x3a:
     {
@@ -293,13 +343,16 @@ void cpu::CPU::emulate()
     }
     break;
     case 0x3b:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x3c:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x3d:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // MVI A,D8
     case 0x3e:
@@ -307,73 +360,96 @@ void cpu::CPU::emulate()
         cpu_state.pc++;
         break;
     case 0x3f:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x40:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x41:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x42:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x43:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x44:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x45:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x46:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x47:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x48:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x49:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x4a:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x4b:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x4c:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x4d:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x4e:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x4f:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x50:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x51:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x52:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x53:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x54:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x55:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // MOV D,M
     case 0x56:
@@ -383,25 +459,32 @@ void cpu::CPU::emulate()
     }
     break;
     case 0x57:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x58:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x59:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x5a:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x5b:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x5c:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x5d:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // MOV E,M
     case 0x5e:
@@ -411,25 +494,32 @@ void cpu::CPU::emulate()
     }
     break;
     case 0x5f:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x60:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x61:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x62:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x63:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x64:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x65:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // MOV H,M
     case 0x66:
@@ -439,57 +529,70 @@ void cpu::CPU::emulate()
     }
     break;
     case 0x67:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x68:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x69:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x6a:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x6b:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x6c:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x6d:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x6e:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // MOV L,A
     case 0x6f:
     {
-        uint16_t address = concat_address(cpu_state.H, cpu_state.L);
-        cpu_state.L = cpu_mem.mem_location[address];
+        cpu_state.L = cpu_state.A;
     }
-    /* code */
     break;
     case 0x70:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x71:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x72:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x73:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x74:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x75:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x76:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // MOV M,A
     case 0x77:
@@ -500,10 +603,12 @@ void cpu::CPU::emulate()
     /* code */
     break;
     case 0x78:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x79:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     // MOV A,D
     case 0x7a:
@@ -527,31 +632,40 @@ void cpu::CPU::emulate()
     }
     break;
     case 0x7f:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x80:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x81:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x82:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x83:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x84:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x85:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x86:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x87:
-        /* code */
+        unmapped_instruction(opcode[0]);
+        exit(0);
         break;
     case 0x88:
         break;
@@ -697,7 +811,8 @@ void cpu::CPU::emulate()
         cpu_state.pc = concat_address(opcode[2], opcode[1]);
         break;
     case 0xc4:
-        cpu_state.pc += 2;
+        unmapped_instruction(opcode[0]);
+        exit(1);
         break;
     case 0xc5:
         cpu_mem.mem_location[cpu_state.sp - 1] = cpu_state.B;
@@ -742,7 +857,6 @@ void cpu::CPU::emulate()
     }
     break;
     case 0xce:
-        cpu_state.pc++;
         break;
     case 0xcf:
         break;
@@ -813,8 +927,15 @@ void cpu::CPU::emulate()
         cpu_state.sp -= 2;
         break;
     case 0xe6:
+    {
+        cpu_state.A = cpu_state.A & opcode[1];
+        cpu_state.flag.c = cpu_state.flag.auxc = 0;
+        cpu_state.flag.z = (cpu_state.A == 0);
+        cpu_state.flag.s = (0x80 == (cpu_state.A & 0x80));
+        cpu_state.flag.p = cpu_state.parity(cpu_state.A);
         cpu_state.pc++;
-        break;
+    }
+    break;
     case 0xe7:
         break;
     case 0xe8:
@@ -822,17 +943,22 @@ void cpu::CPU::emulate()
     case 0xe9:
         break;
     case 0xea:
-        cpu_state.pc += 2;
         break;
     case 0xeb:
-        break;
+    {
+        uint8_t temp1 = cpu_state.D;
+        uint8_t temp2 = cpu_state.E;
+        cpu_state.D = cpu_state.H;
+        cpu_state.E = cpu_state.L;
+        cpu_state.H = temp1;
+        cpu_state.L = temp2;
+    }
+    break;
     case 0xec:
-        cpu_state.pc += 2;
         break;
     case 0xed:
         break;
     case 0xee:
-        cpu_state.pc++;
         break;
     case 0xef:
         break;
@@ -871,7 +997,7 @@ void cpu::CPU::emulate()
     }
     break;
     case 0xf6:
-        cpu_state.pc++;
+
         break;
     case 0xf7:
         break;
@@ -880,17 +1006,14 @@ void cpu::CPU::emulate()
     case 0xf9:
         break;
     case 0xfa:
-        cpu_state.pc += 2;
         break;
     case 0xfb:
         break;
     case 0xfc:
-        cpu_state.pc += 2;
         break;
     case 0xfd:
         break;
     case 0xfe:
-        cpu_state.pc++;
         break;
     case 0xff:
         break;
